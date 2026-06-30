@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">SafeMe - SOS</string>
+
+    <!-- General -->
+    <string name="gps_active">GPS Activo: %1$s</string>
+    <string name="alert_status">ESTADO DE LA ALERTA</string>
+    <string name="ready_to_report">Dispositivo listo para reportar</string>
+    <string name="offline_unresponsive">Dispositivo fuera de línea o sin señal</string>
+    <string name="severity_low">Alerta de Severidad Baja - Monitoreo Activo</string>
+    <string name="severity_medium">Alerta de Severidad Media - Rescatistas Alertados</string>
+    <string name="severity_high">Alerta Crítica de Severidad Alta - Acciones en Progreso</string>
+
+    <!-- Tabs -->
+    <string name="tab_sos">Botón SOS</string>
+    <string name="tab_reports">Reportes</string>
+    <string name="tab_numbers">Números</string>
+    <string name="tab_profile">Perfil</string>
+
+    <!-- Registration -->
+    <string name="registration_title">Registro de Seguridad Personal</string>
+    <string name="user_data">Datos del Usuario</string>
+    <string name="full_name">Nombre Completo</string>
+    <string name="id_card">Identificación / Cédula</string>
+    <string name="email_address">Correo Electrónico</string>
+    <string name="emergency_contacts_title">Contactos de Emergencia (Plural)</string>
+    <string name="family_phones_label">Teléfonos de familiares (separados por coma)</string>
+    <string name="family_phones_placeholder">+50761234567, +50769876543</string>
+    <string name="rescue_location">Ubicación de Rescate</string>
+    <string name="country_label">País: %1$s</string>
+    <string name="city_label">Ciudad: %1$s</string>
+    <string name="register_button">Registrar</string>
+
+    <!-- SOS Button Screen -->
+    <string name="sos_title">S O S</string>
+    <string name="hold_sos">MANTÉN PULSADO</string>
+    <string name="select_emergency_type">1. Selecciona el Tipo de Emergencia</string>
+    <string name="silent_voice_alert">2. Alerta Silenciosa por Voz</string>
+    <string name="enable_voice_activation">Habilitar activación por voz</string>
+    <string name="listening_active">Escuchando palabra clave "AUXILIO" o "AYUDA"...</string>
+    <string name="listening_inactive">Activación por voz inactiva</string>
+    <string name="voice_commands_simulation">Comandos simulados de voz</string>
+    <string name="dispatch_monitoring_console">CONSOLA DE MONITOREO DE DESPACHOS</string>
+    <string name="recent_reports_today">REPORTES RECIENTES (HOY)</string>
+    <string name="no_recent_reports">No hay reportes de emergencia hoy.</string>
+    <string name="alert_format">Alerta: %1$s en %2$s - %3$s</string>
+
+    <!-- Reports History Screen -->
+    <string name="reports_history_title">Historial de Reportes</string>
+    <string name="reports_history_subtitle">Registro histórico de alertas locales y nacionales</string>
+    <string name="no_reports_yet">No se han registrado reportes en este dispositivo.</string>
+    <string name="view_detail">Ver Detalle</string>
+    <string name="alert_details">Detalles del Reporte</string>
+    <string name="field_type">Tipo de Alerta:</string>
+    <string name="field_date">Fecha/Hora:</string>
+    <string name="field_location">Ubicación:</string>
+    <string name="field_status">Estado de Alerta:</string>
+    <string name="status_green">A Salvo (Verde)</string>
+    <string name="status_yellow">Riesgo Bajo (Amarillo)</string>
+    <string name="status_orange">Riesgo Medio (Naranja)</string>
+    <string name="status_red">Crítico (Rojo)</string>
+    <string name="status_black">Sin Señal (Negro)</string>
+    <string name="close_button">Cerrar</string>
+
+    <!-- Numbers DB Screen -->
+    <string name="numbers_db_title">Directorio de Emergencia</string>
+    <string name="numbers_db_subtitle">Teléfonos de ayuda inmediata en tu zona</string>
+    <string name="no_numbers_found">No se encontraron números para este país.</string>
+    <string name="call_action">Llamar %1$s</string>
+    <string name="sms_action">SMS %1$s</string>
+
+    <!-- Profile Screen -->
+    <string name="profile_title">Mi Perfil de Rescate</string>
+    <string name="profile_subtitle">Detalles de identificación en emergencias</string>
+    <string name="field_names">Nombres:</string>
+    <string name="field_id">Identificación:</string>
+    <string name="field_email">Correo:</string>
+    <string name="field_country">País:</string>
+    <string name="field_city">Ciudad:</string>
+    <string name="field_family_contacts">Contactos Familia:</string>
+    <string name="edit_profile_button">Editar Perfil</string>
+
+    <!-- Safety Check Dialog -->
+    <string name="safety_dialog_title">¿ESTÁS A SALVO?</string>
+    <string name="safety_dialog_message">Por favor, confirma si te encuentras en una situación segura o si necesitas asistencia.</string>
+    <string name="safety_dialog_countdown">Respuesta requerida en: %1$d s</string>
+    <string name="safety_yes">SÍ, ESTOY A SALVO</string>
+    <string name="safety_no">ENVIAR ALERTA MÁXIMA</string>
+</resources>

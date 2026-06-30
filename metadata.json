@@ -1,0 +1,6 @@
+{
+  "name": "SafeMe - SOS",
+  "description": "Una aplicación de alerta de emergencia SOS que permite emitir reportes de seguridad geolocalizados, notificar a contactos por correo y simular un seguimiento de rescate con múltiples niveles de severidad.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
