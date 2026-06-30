@@ -91,17 +91,45 @@ class EmergencyViewModel(application: Application) : AndroidViewModel(applicatio
     val emailLogs: StateFlow<List<String>> = _emailLogs
 
     // Preloaded list of countries and some major cities for registration
-    val countriesList = listOf("Argentina", "Chile", "Colombia", "Ecuador", "España", "México", "Perú", "Venezuela", "USA")
+    val countriesList = listOf(
+        "Argentina", "Bolivia", "Brasil", "Canadá", "Chile", "Colombia", "Costa Rica", "Cuba", 
+        "Ecuador", "El Salvador", "España", "Guatemala", "Honduras", "México", "Nicaragua", 
+        "Panamá", "Paraguay", "Perú", "Puerto Rico", "República Dominicana", "Uruguay", 
+        "Venezuela", "USA", "Reino Unido", "Francia", "Alemania", "Italia", "Portugal", 
+        "Japón", "China", "Australia"
+    )
     val citiesMap = mapOf(
         "Argentina" to listOf("Buenos Aires", "Córdoba", "Rosario", "Mendoza"),
+        "Bolivia" to listOf("La Paz", "Sucre", "Santa Cruz", "Cochabamba"),
+        "Brasil" to listOf("São Paulo", "Río de Janeiro", "Brasilia", "Salvador"),
+        "Canadá" to listOf("Toronto", "Vancouver", "Montreal", "Ottawa"),
         "Chile" to listOf("Santiago", "Valparaíso", "Concepción", "La Serena"),
         "Colombia" to listOf("Bogotá", "Medellín", "Cali", "Barranquilla", "Cartagena"),
+        "Costa Rica" to listOf("San José", "Alajuela", "Cartago", "Heredia"),
+        "Cuba" to listOf("La Habana", "Santiago de Cuba", "Camagüey", "Holguín"),
         "Ecuador" to listOf("Quito", "Guayaquil", "Cuenca", "Manta"),
+        "El Salvador" to listOf("San Salvador", "Santa Ana", "San Miguel", "Mejicanos"),
         "España" to listOf("Madrid", "Barcelona", "Valencia", "Sevilla", "Zaragoza"),
+        "Guatemala" to listOf("Ciudad de Guatemala", "Quetzaltenango", "Escuintla", "Cobán"),
+        "Honduras" to listOf("Tegucigalpa", "San Pedro Sula", "La Ceiba", "Choloma"),
         "México" to listOf("CDMX", "Guadalajara", "Monterrey", "Cancún", "Puebla"),
+        "Nicaragua" to listOf("Managua", "León", "Masaya", "Granada"),
+        "Panamá" to listOf("Ciudad de Panamá", "David", "Colón", "Santiago"),
+        "Paraguay" to listOf("Asunción", "Ciudad del Este", "San Lorenzo", "Luque"),
         "Perú" to listOf("Lima", "Arequipa", "Trujillo", "Chiclayo", "Cusco"),
+        "Puerto Rico" to listOf("San Juan", "Bayamón", "Carolina", "Ponce"),
+        "República Dominicana" to listOf("Santo Domingo", "Santiago", "La Romana", "Punta Cana"),
+        "Uruguay" to listOf("Montevideo", "Salto", "Paysandú", "Maldonado"),
         "Venezuela" to listOf("Caracas", "Maracaibo", "Valencia", "Barquisimeto"),
-        "USA" to listOf("Miami", "New York", "San Francisco", "Los Angeles")
+        "USA" to listOf("Miami", "New York", "San Francisco", "Los Angeles", "Chicago"),
+        "Reino Unido" to listOf("Londres", "Manchester", "Birmingham", "Edimburgo"),
+        "Francia" to listOf("París", "Marsella", "Lyon", "Toulouse"),
+        "Alemania" to listOf("Berlín", "Múnich", "Fráncfort", "Hamburgo"),
+        "Italia" to listOf("Roma", "Milán", "Nápoles", "Florencia"),
+        "Portugal" to listOf("Lisboa", "Oporto", "Braga", "Coímbra"),
+        "Japón" to listOf("Tokio", "Osaka", "Kioto", "Yokohama"),
+        "China" to listOf("Pekín", "Shanghái", "Cantón", "Shenzhen"),
+        "Australia" to listOf("Sídney", "Melbourne", "Brisbane", "Perth")
     )
 
     private var timerJob: Job? = null
