@@ -307,12 +307,25 @@ fun SafeMeBottomBar(
 // ----------------- REGISTRATION SCREEN -----------------
 @Composable
 fun RegistrationScreen(viewModel: EmergencyViewModel) {
+    val profile by viewModel.userProfile.collectAsState(initial = null)
+
     var name by remember { mutableStateOf("") }
     var identification by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var familyPhones by remember { mutableStateOf("") }
     var country by remember { mutableStateOf("Colombia") }
     var city by remember { mutableStateOf("Bogotá") }
+
+    LaunchedEffect(profile) {
+        profile?.let {
+            name = it.name
+            identification = it.identification
+            email = it.email
+            familyPhones = it.familyPhones
+            country = it.country
+            city = it.city
+        }
+    }
 
     var expandedCountry by remember { mutableStateOf(false) }
     var expandedCity by remember { mutableStateOf(false) }
