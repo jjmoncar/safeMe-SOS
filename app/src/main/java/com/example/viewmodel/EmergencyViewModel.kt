@@ -6,8 +6,15 @@ import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.core.content.ContextCompat
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
+import com.google.android.gms.tasks.Tasks
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.BuildConfig
@@ -58,7 +65,8 @@ class EmergencyViewModel(application: Application) : AndroidViewModel(applicatio
         EMERGENCY_BUTTON,
         REPORTS_DAILY,
         NUMBERS_DB,
-        PROFILE
+        PROFILE,
+        HELP
     }
 
     private val _currentScreen = MutableStateFlow(Screen.EMERGENCY_BUTTON)
@@ -86,9 +94,30 @@ class EmergencyViewModel(application: Application) : AndroidViewModel(applicatio
     private val _detectedSpeech = MutableStateFlow("")
     val detectedSpeech: StateFlow<String> = _detectedSpeech
 
+    // Control for Emergency Central Dispatch (True when active, False during tests/adjustments)
+    private val _isCentralDispatchEnabled = MutableStateFlow(false)
+    val isCentralDispatchEnabled: StateFlow<Boolean> = _isCentralDispatchEnabled
+
     // Email Dispatch Status Logs
     private val _emailLogs = MutableStateFlow<List<String>>(emptyList())
     val emailLogs: StateFlow<List<String>> = _emailLogs
+
+    data class SimulatedAlert(
+        val contactPhone: String,
+        val senderName: String,
+        val alertType: String,
+        val severity: String,
+        val latitude: Double,
+        val longitude: Double,
+        val timestamp: Long
+    )
+
+    private val _simulatedIncomingAlerts = MutableStateFlow<List<SimulatedAlert>>(emptyList())
+    val simulatedIncomingAlerts: StateFlow<List<SimulatedAlert>> = _simulatedIncomingAlerts
+
+    fun dismissSimulatedAlert(alert: SimulatedAlert) {
+        _simulatedIncomingAlerts.value = _simulatedIncomingAlerts.value.filter { it != alert }
+    }
 
     // Preloaded list of countries and some major cities for registration
     val countriesList = listOf(
@@ -152,7 +181,7 @@ class EmergencyViewModel(application: Application) : AndroidViewModel(applicatio
     }
 
     // Register User
-    fun registerUser(name: String, identification: String, email: String, familyPhones: String, country: String, city: String) {
+    fun registerUser(name: String, identification: String, email: String, familyPhones: String, country: String, city: String, installedAppPhones: String) {
         viewModelScope.launch {
             val profile = UserProfile(
                 name = name,
@@ -160,7 +189,8 @@ class EmergencyViewModel(application: Application) : AndroidViewModel(applicatio
                 email = email,
                 familyPhones = familyPhones,
                 country = country,
-                city = city
+                city = city,
+                installedAppPhones = installedAppPhones
             )
             repository.saveProfile(profile)
             _selectedCountry.value = country
@@ -178,7 +208,8 @@ class EmergencyViewModel(application: Application) : AndroidViewModel(applicatio
             val newReport: EmergencyReport
             if (lastReport == null || lastReport.alertType != alertType || lastReport.severityColor == "GREEN") {
                 // First activation: YELLOW
-                val (lat, lng) = getMockCoordinates(profile.country, profile.city)
+                val exactLoc = fetchGPSCoordinates()
+                val (lat, lng) = exactLoc ?: getMockCoordinates(profile.country, profile.city)
                 newReport = EmergencyReport(
                     alertType = alertType,
                     timestamp = System.currentTimeMillis(),
@@ -190,9 +221,27 @@ class EmergencyViewModel(application: Application) : AndroidViewModel(applicatio
                     lastUpdate = System.currentTimeMillis()
                 )
                 val id = repository.createReport(newReport)
-                _activeReport.value = newReport.copy(id = id.toInt())
-                addEmailLog("🚨 SOS Iniciado: Severidad AMARILLA")
-                dispatchEmergencySMS(_activeReport.value!!, profile)
+                val finalReport = newReport.copy(id = id.toInt())
+                _activeReport.value = finalReport
+                addEmailLog("🚨 SOS Iniciado: Severidad AMARILLA con ubicación exacta.")
+                dispatchEmergencySMS(finalReport, profile)
+                
+                // Trigger simulated alerts on contact screens for contacts with the app
+                val phones = profile.familyPhones.split(",").map { it.trim() }.filter { it.isNotEmpty() }
+                val appInstalledPhones = profile.installedAppPhones.split(",").map { it.trim() }.filter { it.isNotEmpty() }.toSet()
+                val incomingAlerts = phones.filter { appInstalledPhones.contains(it) }.map { phone ->
+                    SimulatedAlert(
+                        contactPhone = phone,
+                        senderName = profile.name,
+                        alertType = finalReport.alertType,
+                        severity = finalReport.severityColor,
+                        latitude = finalReport.latitude,
+                        longitude = finalReport.longitude,
+                        timestamp = System.currentTimeMillis()
+                    )
+                }
+                _simulatedIncomingAlerts.value = incomingAlerts
+
                 startSafetyCheckTimer()
             } else {
                 // Successive trigger
@@ -201,14 +250,35 @@ class EmergencyViewModel(application: Application) : AndroidViewModel(applicatio
                     "ORANGE" -> "RED"
                     else -> "RED" // Remains RED or goes black on timeout
                 }
+                val exactLoc = fetchGPSCoordinates()
+                val (lat, lng) = exactLoc ?: Pair(lastReport.latitude, lastReport.longitude)
                 newReport = lastReport.copy(
+                    latitude = lat,
+                    longitude = lng,
                     severityColor = nextSeverity,
                     lastUpdate = System.currentTimeMillis()
                 )
                 repository.updateReport(newReport)
                 _activeReport.value = newReport
-                addEmailLog("⚠️ SOS Actualizado: Severidad $nextSeverity")
+                addEmailLog("⚠️ SOS Actualizado: Severidad $nextSeverity con ubicación exacta.")
                 dispatchEmergencySMS(newReport, profile)
+
+                // Trigger simulated alerts on contact screens for contacts with the app
+                val phones = profile.familyPhones.split(",").map { it.trim() }.filter { it.isNotEmpty() }
+                val appInstalledPhones = profile.installedAppPhones.split(",").map { it.trim() }.filter { it.isNotEmpty() }.toSet()
+                val incomingAlerts = phones.filter { appInstalledPhones.contains(it) }.map { phone ->
+                    SimulatedAlert(
+                        contactPhone = phone,
+                        senderName = profile.name,
+                        alertType = newReport.alertType,
+                        severity = newReport.severityColor,
+                        latitude = newReport.latitude,
+                        longitude = newReport.longitude,
+                        timestamp = System.currentTimeMillis()
+                    )
+                }
+                _simulatedIncomingAlerts.value = incomingAlerts
+
                 resetSafetyCheckTimer()
             }
         }
@@ -247,7 +317,11 @@ class EmergencyViewModel(application: Application) : AndroidViewModel(applicatio
             _activeReport.value = updatedReport
             stopTimers()
             _showSafetyDialog.value = false
-            addEmailLog("💀 ALERTA MÁXIMA: Dispositivo sin señal (Color NEGRO). Alerta enviada automáticamente a los equipos de rescate.")
+            if (_isCentralDispatchEnabled.value) {
+                addEmailLog("💀 ALERTA MÁXIMA: Dispositivo sin señal (Color NEGRO). Alerta enviada automáticamente a los equipos de rescate.")
+            } else {
+                addEmailLog("💀 ALERTA MÁXIMA: Dispositivo sin señal (Color NEGRO). [MODO PRUEBA] Despacho retenido: Central de emergencias desactivada.")
+            }
         }
     }
 
@@ -300,6 +374,67 @@ class EmergencyViewModel(application: Application) : AndroidViewModel(applicatio
         return format.format(date)
     }
 
+    private suspend fun fetchGPSCoordinates(): Pair<Double, Double>? = withContext(Dispatchers.IO) {
+        val context = getApplication<Application>()
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+            ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            Log.d("SafeMe_Location", "Permissions not granted")
+            return@withContext null
+        }
+
+        // Try FusedLocationProviderClient first (highest accuracy)
+        try {
+            val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
+            
+            // Try to get current high accuracy location with a quick timeout (e.g., 4 seconds)
+            val locationTask = fusedLocationClient.getCurrentLocation(
+                Priority.PRIORITY_HIGH_ACCURACY,
+                null
+            )
+            val location = Tasks.await(locationTask, 4, java.util.concurrent.TimeUnit.SECONDS)
+            if (location != null) {
+                Log.d("SafeMe_Location", "Current location found: ${location.latitude}, ${location.longitude}")
+                return@withContext Pair(location.latitude, location.longitude)
+            }
+        } catch (e: Exception) {
+            Log.e("SafeMe_Location", "Error getting current location: ${e.message}")
+        }
+
+        // Try last known location as fallback
+        try {
+            val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
+            val lastLocationTask = fusedLocationClient.lastLocation
+            val lastLocation = Tasks.await(lastLocationTask, 2, java.util.concurrent.TimeUnit.SECONDS)
+            if (lastLocation != null) {
+                Log.d("SafeMe_Location", "Last location found: ${lastLocation.latitude}, ${lastLocation.longitude}")
+                return@withContext Pair(lastLocation.latitude, lastLocation.longitude)
+            }
+        } catch (e: Exception) {
+            Log.e("SafeMe_Location", "Error getting last location: ${e.message}")
+        }
+
+        // Try standard LocationManager as absolute fallback
+        try {
+            val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as android.location.LocationManager
+            val providers = locationManager.getProviders(true)
+            var bestLocation: android.location.Location? = null
+            for (provider in providers) {
+                val loc = locationManager.getLastKnownLocation(provider) ?: continue
+                if (bestLocation == null || loc.accuracy < bestLocation.accuracy) {
+                    bestLocation = loc
+                }
+            }
+            if (bestLocation != null) {
+                Log.d("SafeMe_Location", "Location from LocationManager: ${bestLocation.latitude}, ${bestLocation.longitude}")
+                return@withContext Pair(bestLocation.latitude, bestLocation.longitude)
+            }
+        } catch (e: Exception) {
+            Log.e("SafeMe_Location", "Error getting location from LocationManager: ${e.message}")
+        }
+
+        return@withContext null
+    }
+
     // Coordinate helper
     private fun getMockCoordinates(country: String, city: String): Pair<Double, Double> {
         return when (city) {
@@ -323,16 +458,16 @@ class EmergencyViewModel(application: Application) : AndroidViewModel(applicatio
         }
     }
 
-    // Send SMS Alerts (Simulated & Gemini Drafted)
+    // Send WhatsApp Alerts (Simulated & Gemini Drafted)
     private fun dispatchEmergencySMS(report: EmergencyReport, profile: UserProfile) {
-        addEmailLog("💬 Iniciando envío de mensajes de texto (SMS) a familiares y rescatistas...")
+        addEmailLog("🟢 Generando alertas de WhatsApp para tus contactos de emergencia...")
         viewModelScope.launch {
             val systemTip = getGeminiSystemTip(report.alertType, report.severityColor)
             val phones = profile.familyPhones.split(",").map { it.trim() }.filter { it.isNotEmpty() }
 
             val draft = """
                 ===================================================
-                🚨 ALERTA DE EMERGENCIA - SAFEME SOS (SMS) 🚨
+                🚨 ALERTA DE EMERGENCIA - SAFEME SOS (WHATSAPP) 🚨
                 ===================================================
                 SafeMe - SOS de parte de ${profile.name} (ID: ${profile.identification}).
                 
@@ -348,10 +483,20 @@ class EmergencyViewModel(application: Application) : AndroidViewModel(applicatio
                 ===================================================
             """.trimIndent()
 
+            val appInstalledPhones = profile.installedAppPhones.split(",").map { it.trim() }.filter { it.isNotEmpty() }.toSet()
+
             phones.forEach { phone ->
-                addEmailLog("📩 SMS enviado con éxito a $phone [Código ${report.severityColor}]")
+                if (appInstalledPhones.contains(phone)) {
+                    addEmailLog("📱 [SafeMe-SOS] ¡Alerta en pantalla enviada! El contacto $phone tiene la app instalada y recibió la notificación SOS directamente en pantalla.")
+                } else {
+                    addEmailLog("💬 [WhatsApp] El contacto $phone NO tiene la app instalada. Envíale la alerta exclusivamente por WhatsApp.")
+                }
             }
-            addEmailLog("🚨 Notificación enviada a los cuerpos de seguridad de ${profile.city}, ${profile.country}.")
+            if (_isCentralDispatchEnabled.value) {
+                addEmailLog("🚨 Notificación de auxilio generada para los cuerpos de seguridad de ${profile.city}, ${profile.country}.")
+            } else {
+                addEmailLog("🔇 [MODO PRUEBA] Central de despacho desactivada. No se notificó a los cuerpos de seguridad de ${profile.city}, ${profile.country}.")
+            }
 
             // Print AI draft to terminal/log
             Log.d("SafeMe_SOS", draft)
@@ -361,8 +506,64 @@ class EmergencyViewModel(application: Application) : AndroidViewModel(applicatio
     private fun sendSafeSMS(report: EmergencyReport, profile: UserProfile) {
         val phones = profile.familyPhones.split(",").map { it.trim() }.filter { it.isNotEmpty() }
         phones.forEach { phone ->
-            addEmailLog("💬 SMS de TRANQUILIDAD enviado a $phone: ¡${profile.name} está A SALVO!")
+            addEmailLog("💬 WhatsApp de TRANQUILIDAD generado para $phone: ¡${profile.name} está A SALVO!")
         }
+    }
+
+    // Generate text for WhatsApp
+    fun generateWhatsAppMessage(report: EmergencyReport, profile: UserProfile): String {
+        val tip = getStaticFallbackTip(report.alertType, report.severityColor)
+        return """
+🚨 *ALERTA DE EMERGENCIA - SAFEME SOS* 🚨
+---------------------------------------------------
+*SafeMe - SOS* de parte de *${profile.name}* (ID: ${profile.identification}).
+
+⚠️ *ESTADO DE RIESGO:* Código ${report.severityColor}
+📍 *UBICACIÓN:* ${profile.city}, ${profile.country}
+🛰️ *GPS:* Latitud ${report.latitude}, Longitud ${report.longitude}
+🔗 *MAPA:* https://www.google.com/maps/search/?api=1&query=${report.latitude},${report.longitude}
+
+*INCIDENTE:* ${report.alertType}
+
+*RECOMENDACIÓN:*
+$tip
+---------------------------------------------------
+        """.trimIndent()
+    }
+
+    // Function to launch WhatsApp Intent
+    fun sendWhatsAppMessage(context: Context, phone: String, message: String) {
+        viewModelScope.launch {
+            try {
+                // Clean phone number (leave only digits)
+                val cleanPhone = phone.replace(Regex("[^0-9]"), "")
+                // Create intent with wa.me deep link
+                val url = "https://api.whatsapp.com/send?phone=$cleanPhone&text=${java.net.URLEncoder.encode(message, "UTF-8")}"
+                val intent = Intent(Intent.ACTION_VIEW).apply {
+                    data = Uri.parse(url)
+                    setPackage("com.whatsapp") // Try to target WhatsApp directly
+                }
+                
+                try {
+                    context.startActivity(intent)
+                    addEmailLog("📲 Abriendo chat de WhatsApp con $phone...")
+                } catch (e: Exception) {
+                    val fallbackIntent = Intent(Intent.ACTION_VIEW).apply {
+                        data = Uri.parse(url)
+                    }
+                    context.startActivity(fallbackIntent)
+                    addEmailLog("📲 Abriendo WhatsApp (Navegador/Fallback) con $phone...")
+                }
+            } catch (e: Exception) {
+                Log.e("SafeMe_SOS", "Error sending WhatsApp", e)
+                addEmailLog("❌ Error al abrir WhatsApp para $phone")
+            }
+        }
+    }
+
+    fun sendSafeWhatsAppMessage(context: Context, phone: String, profile: UserProfile) {
+        val message = "✅ *¡ESTOY A SALVO!* \n\nHola, te escribo para confirmarte que ya me encuentro a salvo de la situación de emergencia. \n\n- Enviado desde *SafeMe - SOS* por *${profile.name}*."
+        sendWhatsAppMessage(context, phone, message)
     }
 
     // Call Gemini to generate dynamic Spanish emergency guidelines based on situation

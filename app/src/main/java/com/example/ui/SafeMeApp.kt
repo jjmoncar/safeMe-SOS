@@ -118,6 +118,9 @@ fun SafeMeApp(viewModel: EmergencyViewModel) {
                     EmergencyViewModel.Screen.PROFILE -> {
                         ProfileScreen(viewModel = viewModel)
                     }
+                    EmergencyViewModel.Screen.HELP -> {
+                        HelpScreen(viewModel = viewModel)
+                    }
                 }
             }
 
@@ -192,6 +195,147 @@ fun SafeMeApp(viewModel: EmergencyViewModel) {
                             modifier = Modifier.testTag("simulate_lost_signal_button")
                         ) {
                             Text("SIMULAR PÉRDIDA DE SEÑAL", color = RedEmergencyLight)
+                        }
+                    },
+                    containerColor = SlateSurface,
+                    shape = RoundedCornerShape(24.dp)
+                )
+            }
+
+            // Simulated incoming alerts for contacts who have the app
+            val simulatedAlerts by viewModel.simulatedIncomingAlerts.collectAsState()
+            if (simulatedAlerts.isNotEmpty()) {
+                val currentAlert = simulatedAlerts.first()
+                AlertDialog(
+                    onDismissRequest = { viewModel.dismissSimulatedAlert(currentAlert) },
+                    title = {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(Icons.Filled.Notifications, contentDescription = null, tint = RedEmergencyLight)
+                            Text(
+                                stringResource(R.string.simulated_incoming_alert_title),
+                                color = TextWhite,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 16.sp
+                            )
+                        }
+                    },
+                    text = {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(SlateBackground, RoundedCornerShape(12.dp))
+                                .padding(16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                stringResource(R.string.simulated_incoming_alert_desc, currentAlert.contactPhone),
+                                color = TextWhite,
+                                fontSize = 12.sp,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.padding(bottom = 16.dp)
+                            )
+
+                            // Phone screen mock representation
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .border(1.dp, RedEmergencyLight, RoundedCornerShape(16.dp)),
+                                colors = CardDefaults.cardColors(containerColor = SlateCard),
+                                shape = RoundedCornerShape(16.dp)
+                            ) {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    // Header
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                    ) {
+                                        Icon(
+                                            Icons.Filled.Warning,
+                                            contentDescription = null,
+                                            tint = RedEmergencyLight,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                        Text(
+                                            "SAFEME-SOS REALTIME",
+                                            color = RedEmergencyLight,
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 11.sp
+                                        )
+                                    }
+
+                                    Spacer(modifier = Modifier.height(4.dp))
+
+                                    // Severity Badge
+                                    val severityBg = when (currentAlert.severity) {
+                                        "YELLOW" -> AmberWarning
+                                        "ORANGE" -> OrangeWarning
+                                        "RED" -> RedEmergency
+                                        else -> RedEmergencyDark
+                                    }
+                                    Box(
+                                        modifier = Modifier
+                                            .background(severityBg, RoundedCornerShape(12.dp))
+                                            .padding(horizontal = 12.dp, vertical = 4.dp)
+                                    ) {
+                                        Text(
+                                            text = "CÓDIGO ${currentAlert.severity}",
+                                            color = TextWhite,
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 11.sp
+                                        )
+                                    }
+
+                                    Spacer(modifier = Modifier.height(4.dp))
+
+                                    // Content rows
+                                    Text(
+                                        text = stringResource(R.string.sender_label, currentAlert.senderName),
+                                        color = TextWhite,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 14.sp
+                                    )
+
+                                    Text(
+                                        text = stringResource(R.string.contact_label, currentAlert.contactPhone),
+                                        color = TextGray,
+                                        fontSize = 12.sp
+                                    )
+
+                                    Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(SlateSurface))
+
+                                    Text(
+                                        text = stringResource(R.string.incident_label, currentAlert.alertType),
+                                        color = TextWhite,
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+
+                                    Text(
+                                        text = stringResource(R.string.gps_coords_label, String.format(Locale.US, "%.5f", currentAlert.latitude), String.format(Locale.US, "%.5f", currentAlert.longitude)),
+                                        color = TextGray,
+                                        fontSize = 11.sp,
+                                        textAlign = TextAlign.Center
+                                    )
+                                }
+                            }
+                        }
+                    },
+                    confirmButton = {
+                        Button(
+                            onClick = { viewModel.dismissSimulatedAlert(currentAlert) },
+                            colors = ButtonDefaults.buttonColors(containerColor = RedEmergency),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(stringResource(R.string.dismiss_button), color = TextWhite)
                         }
                     },
                     containerColor = SlateSurface,
@@ -301,6 +445,20 @@ fun SafeMeBottomBar(
             colors = m3NavColors,
             modifier = Modifier.testTag("tab_profile")
         )
+
+        NavigationBarItem(
+            selected = currentScreen == EmergencyViewModel.Screen.HELP,
+            onClick = { onNavigate(EmergencyViewModel.Screen.HELP) },
+            icon = {
+                Icon(
+                    imageVector = Icons.Filled.Help,
+                    contentDescription = "Ayuda"
+                )
+            },
+            label = { Text(stringResource(R.string.tab_help), fontSize = 11.sp) },
+            colors = m3NavColors,
+            modifier = Modifier.testTag("tab_help")
+        )
     }
 }
 
@@ -309,35 +467,22 @@ fun SafeMeBottomBar(
 fun RegistrationScreen(viewModel: EmergencyViewModel) {
     val profile by viewModel.userProfile.collectAsState(initial = null)
 
-    var name by remember { mutableStateOf("") }
-    var identification by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
-    var familyPhones by remember { mutableStateOf("") }
-    var country by remember { mutableStateOf("Colombia") }
-    var city by remember { mutableStateOf("Bogotá") }
-
-    LaunchedEffect(profile) {
-        profile?.let {
-            name = it.name
-            identification = it.identification
-            email = it.email
-            familyPhones = it.familyPhones
-            country = it.country
-            city = it.city
-        }
+    var name by remember(profile) { mutableStateOf(profile?.name ?: "") }
+    var identification by remember(profile) { mutableStateOf(profile?.identification ?: "") }
+    var email by remember(profile) { mutableStateOf(profile?.email ?: "") }
+    var familyPhones by remember(profile) { mutableStateOf(profile?.familyPhones ?: "") }
+    var installedAppPhonesSet by remember(profile) {
+        mutableStateOf(
+            profile?.installedAppPhones?.split(",")?.map { it.trim() }?.filter { it.isNotEmpty() }?.toSet() ?: emptySet()
+        )
     }
+    var country by remember(profile) { mutableStateOf(profile?.country ?: "Colombia") }
+    var city by remember(profile) { mutableStateOf(profile?.city ?: "Bogotá") }
 
     var expandedCountry by remember { mutableStateOf(false) }
     var expandedCity by remember { mutableStateOf(false) }
 
     val cities = viewModel.citiesMap[country] ?: emptyList()
-
-    // When country changes, reset city to its first element
-    LaunchedEffect(country) {
-        if (cities.isNotEmpty() && !cities.contains(city)) {
-            city = cities[0]
-        }
-    }
 
     Column(
         modifier = Modifier
@@ -482,6 +627,69 @@ fun RegistrationScreen(viewModel: EmergencyViewModel) {
                         .testTag("input_family_emails")
                 )
 
+                val phonesList = remember(familyPhones) {
+                    familyPhones.split(",")
+                        .map { it.trim() }
+                        .filter { it.isNotEmpty() }
+                }
+
+                if (phonesList.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = stringResource(R.string.family_phones_app_installed_label),
+                        color = RedEmergencyLight,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 13.sp,
+                        modifier = Modifier.align(Alignment.Start)
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    phonesList.forEach { phone ->
+                        val isInstalled = installedAppPhonesSet.contains(phone)
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(SlateCard, RoundedCornerShape(8.dp))
+                                .padding(horizontal = 12.dp, vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = "📱 $phone",
+                                color = TextWhite,
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = if (isInstalled) "SafeMe-SOS " + stringResource(R.string.status_online) else "Sin App",
+                                    color = if (isInstalled) GreenSafe else TextGray,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(end = 8.dp)
+                                )
+                                Checkbox(
+                                    checked = isInstalled,
+                                    onCheckedChange = { checked ->
+                                        val newSet = installedAppPhonesSet.toMutableSet()
+                                        if (checked) {
+                                            newSet.add(phone)
+                                        } else {
+                                            newSet.remove(phone)
+                                        }
+                                        installedAppPhonesSet = newSet
+                                    },
+                                    colors = CheckboxDefaults.colors(
+                                        checkedColor = RedEmergencyLight,
+                                        uncheckedColor = TextGray,
+                                        checkmarkColor = TextWhite
+                                    )
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(4.dp))
+                    }
+                }
+
                 Text(
                     "Ubicación de Rescate",
                     color = RedEmergencyLight,
@@ -527,6 +735,10 @@ fun RegistrationScreen(viewModel: EmergencyViewModel) {
                                 onClick = {
                                     country = c
                                     expandedCountry = false
+                                    val newCities = viewModel.citiesMap[c] ?: emptyList()
+                                    if (newCities.isNotEmpty()) {
+                                        city = newCities[0]
+                                    }
                                 }
                             )
                         }
@@ -584,7 +796,8 @@ fun RegistrationScreen(viewModel: EmergencyViewModel) {
         Button(
             onClick = {
                 if (isValid) {
-                    viewModel.registerUser(name, identification, email, familyPhones, country, city)
+                    val installedAppPhonesStr = installedAppPhonesSet.joinToString(",")
+                    viewModel.registerUser(name, identification, email, familyPhones, country, city, installedAppPhonesStr)
                 }
             },
             enabled = isValid,
@@ -756,6 +969,8 @@ fun EmergencyButtonScreen(viewModel: EmergencyViewModel) {
     // Speech simulation commands for easy browser/emulator testing
     val mockVoiceCommands = listOf("SafeMe", "Auxilio", "Terremoto", "Asalto", "Ascensor")
 
+    val isCentralDispatchEnabled by viewModel.isCentralDispatchEnabled.collectAsState()
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -764,6 +979,45 @@ fun EmergencyButtonScreen(viewModel: EmergencyViewModel) {
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        if (!isCentralDispatchEnabled) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 12.dp)
+                    .testTag("central_dispatch_disabled_banner"),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFC0392B).copy(alpha = 0.2f)),
+                border = BorderStroke(1.dp, Color(0xFFC0392B))
+            ) {
+                Row(
+                    modifier = Modifier.padding(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Warning,
+                        contentDescription = null,
+                        tint = Color(0xFFECF0F1),
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column {
+                        Text(
+                            text = stringResource(R.string.banner_dispatch_disabled_title),
+                            color = Color(0xFFECF0F1),
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 13.sp
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = stringResource(R.string.banner_dispatch_disabled_desc),
+                            color = TextGrayLight,
+                            fontSize = 11.sp,
+                            lineHeight = 15.sp
+                        )
+                    }
+                }
+            }
+        }
+
         // Welcome bar showing profile stats
         userProfile?.let { profile ->
             Row(
@@ -776,7 +1030,7 @@ fun EmergencyButtonScreen(viewModel: EmergencyViewModel) {
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Column {
-                    Text("Monitoreo de Rescate Activo", color = TextGray, fontSize = 11.sp)
+                    Text(stringResource(R.string.rescue_monitoring_active), color = TextGray, fontSize = 11.sp)
                     Text(profile.name, color = TextWhite, fontWeight = FontWeight.Bold, fontSize = 16.sp)
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Filled.LocationOn, contentDescription = null, tint = RedEmergencyLight, modifier = Modifier.size(12.dp))
@@ -798,7 +1052,7 @@ fun EmergencyButtonScreen(viewModel: EmergencyViewModel) {
                                 .background(GreenSafe)
                         )
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("Online", color = GreenSafe, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.status_online), color = GreenSafe, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -813,7 +1067,7 @@ fun EmergencyButtonScreen(viewModel: EmergencyViewModel) {
 
         // Disaster selection slider
         Text(
-            "1. Selecciona el Tipo de Emergencia",
+            text = stringResource(R.string.select_emergency_type),
             color = TextWhite,
             fontWeight = FontWeight.Bold,
             fontSize = 15.sp,
@@ -864,14 +1118,14 @@ fun EmergencyButtonScreen(viewModel: EmergencyViewModel) {
 
         // 2. Main emergency tactile button with glowing infinite radar ripple
         Text(
-            "2. Presiona el Botón SOS para Alertar",
+            text = stringResource(R.string.sos_instruction_title),
             color = TextWhite,
             fontWeight = FontWeight.Bold,
             fontSize = 15.sp,
             modifier = Modifier.align(Alignment.Start)
         )
         Text(
-            "Sucesivos toques escalan la severidad (Amarillo ➔ Naranja ➔ Rojo)",
+            text = stringResource(R.string.sos_instruction_desc),
             color = TextGray,
             fontSize = 12.sp,
             modifier = Modifier.align(Alignment.Start)
@@ -900,7 +1154,7 @@ fun EmergencyButtonScreen(viewModel: EmergencyViewModel) {
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        "¡ALERTA DE SEGURIDAD EN CURSO!",
+                        text = stringResource(R.string.active_security_alert),
                         fontWeight = FontWeight.Bold,
                         color = RedEmergencyLight,
                         fontSize = 13.sp
@@ -917,14 +1171,14 @@ fun EmergencyButtonScreen(viewModel: EmergencyViewModel) {
                                 .background(severityColor)
                         )
                         Text(
-                            "SEVERIDAD: ${report.severityColor}",
+                            text = stringResource(R.string.severity_label, report.severityColor),
                             fontWeight = FontWeight.Bold,
                             color = severityColor,
                             fontSize = 16.sp
                         )
                     }
                     Text(
-                        "Tipo: ${report.alertType} | GPS: ${report.latitude}, ${report.longitude}",
+                        text = stringResource(R.string.type_gps_format, report.alertType, report.latitude, report.longitude),
                         color = TextGrayLight,
                         fontSize = 12.sp
                     )
@@ -943,7 +1197,7 @@ fun EmergencyButtonScreen(viewModel: EmergencyViewModel) {
                         ) {
                             Icon(Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("A SALVO (VERDE)", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            Text(stringResource(R.string.status_green_caps), fontSize = 11.sp, fontWeight = FontWeight.Bold)
                         }
                         Button(
                             onClick = { viewModel.simulateDisconnection() },
@@ -956,7 +1210,42 @@ fun EmergencyButtonScreen(viewModel: EmergencyViewModel) {
                         ) {
                             Icon(Icons.Filled.SignalCellularConnectedNoInternet0Bar, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("SIN SEÑAL (NEGRO)", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            Text(stringResource(R.string.status_black_caps), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+
+                    userProfile?.let { profile ->
+                        val contacts = profile.familyPhones.split(",").map { it.trim() }.filter { it.isNotEmpty() }
+                        if (contacts.isNotEmpty()) {
+                            Spacer(modifier = Modifier.height(12.dp))
+                            HorizontalDivider(color = TextGray.copy(alpha = 0.2f), thickness = 1.dp)
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = stringResource(R.string.send_alert_whatsapp_title),
+                                color = TextGrayLight,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.align(Alignment.Start)
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                            contacts.forEach { contact ->
+                                Button(
+                                    onClick = {
+                                        val msg = viewModel.generateWhatsAppMessage(report, profile)
+                                        viewModel.sendWhatsAppMessage(context, contact, msg)
+                                    },
+                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF25D366)), // WhatsApp Green
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(bottom = 6.dp)
+                                        .testTag("whatsapp_button_$contact"),
+                                    shape = RoundedCornerShape(8.dp)
+                                ) {
+                                    Icon(Icons.Filled.Share, contentDescription = null, modifier = Modifier.size(16.dp), tint = TextWhite)
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(stringResource(R.string.send_whatsapp_to, contact), color = TextWhite, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                }
+                            }
                         }
                     }
                 }
@@ -1014,7 +1303,7 @@ fun EmergencyButtonScreen(viewModel: EmergencyViewModel) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Icon(
                         Icons.Filled.Warning,
-                        contentDescription = "Botón de Pánico SOS",
+                        contentDescription = stringResource(R.string.tab_sos),
                         tint = TextWhite,
                         modifier = Modifier.size(48.dp)
                     )
@@ -1027,7 +1316,7 @@ fun EmergencyButtonScreen(viewModel: EmergencyViewModel) {
                         letterSpacing = (-1).sp
                     )
                     Text(
-                        "MANTÉN PULSADO",
+                        text = stringResource(R.string.hold_sos),
                         color = TextWhite.copy(alpha = 0.8f),
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
@@ -1057,8 +1346,8 @@ fun EmergencyButtonScreen(viewModel: EmergencyViewModel) {
                         Icon(Icons.Filled.Mic, contentDescription = null, tint = RedEmergencyLight)
                         Spacer(modifier = Modifier.width(8.dp))
                         Column {
-                            Text("Activación por Voz", color = TextWhite, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                            Text("Escucha activa del comando SOS", color = TextGray, fontSize = 11.sp)
+                            Text(stringResource(R.string.voice_activation_title), color = TextWhite, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                            Text(stringResource(R.string.voice_activation_desc), color = TextGray, fontSize = 11.sp)
                         }
                     }
                     Switch(
@@ -1098,11 +1387,11 @@ fun EmergencyButtonScreen(viewModel: EmergencyViewModel) {
                                 modifier = Modifier.size(16.dp)
                             )
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text(if (isListening) "Escuchando..." else "Activar Micrófono", fontSize = 11.sp)
+                            Text(if (isListening) stringResource(R.string.voice_listening) else stringResource(R.string.voice_activate_mic), fontSize = 11.sp)
                         }
 
                         Text(
-                            text = if (isListening) "¡Di SafeMe o Auxilio!" else "Micrófono Apagado",
+                            text = if (isListening) stringResource(R.string.voice_say_help) else stringResource(R.string.voice_mic_off),
                             color = if (isListening) AmberWarning else TextGray,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold
@@ -1111,7 +1400,7 @@ fun EmergencyButtonScreen(viewModel: EmergencyViewModel) {
 
                     if (detectedSpeech.isNotBlank()) {
                         Text(
-                            text = "Texto capturado: \"$detectedSpeech\"",
+                            text = stringResource(R.string.voice_text_captured, detectedSpeech),
                             color = TextGrayLight,
                             fontSize = 12.sp,
                             modifier = Modifier.padding(top = 8.dp),
@@ -1121,7 +1410,7 @@ fun EmergencyButtonScreen(viewModel: EmergencyViewModel) {
 
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        "Simulador de Comandos de Voz (Para pruebas rápidos):",
+                        text = stringResource(R.string.voice_simulator_desc),
                         color = TextGray,
                         fontSize = 11.sp,
                         modifier = Modifier.align(Alignment.Start)
@@ -1604,6 +1893,7 @@ fun NumbersDbScreen(viewModel: EmergencyViewModel) {
     val emergencyNumbers by viewModel.emergencyNumbers.collectAsState()
     val profile by viewModel.userProfile.collectAsState(initial = null)
     val context = LocalContext.current
+    val isCentralDispatchEnabled by viewModel.isCentralDispatchEnabled.collectAsState()
 
     Column(
         modifier = Modifier
@@ -1612,18 +1902,57 @@ fun NumbersDbScreen(viewModel: EmergencyViewModel) {
             .padding(16.dp)
     ) {
         Text(
-            "Central de Números de Emergencia",
+            stringResource(R.string.numbers_db_title),
             color = TextWhite,
             fontWeight = FontWeight.Bold,
             fontSize = 18.sp
         )
         Text(
-            "Acceso inmediato a los canales oficiales",
+            stringResource(R.string.numbers_db_subtitle),
             color = TextGray,
             fontSize = 12.sp
         )
 
         Spacer(modifier = Modifier.height(12.dp))
+
+        if (!isCentralDispatchEnabled) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 12.dp)
+                    .testTag("numbers_central_dispatch_disabled_banner"),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFC0392B).copy(alpha = 0.2f)),
+                border = BorderStroke(1.dp, Color(0xFFC0392B))
+            ) {
+                Row(
+                    modifier = Modifier.padding(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Warning,
+                        contentDescription = null,
+                        tint = Color(0xFFECF0F1),
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column {
+                        Text(
+                            text = stringResource(R.string.banner_numbers_disabled_title),
+                            color = Color(0xFFECF0F1),
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 13.sp
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = stringResource(R.string.banner_numbers_disabled_desc),
+                            color = TextGrayLight,
+                            fontSize = 11.sp,
+                            lineHeight = 15.sp
+                        )
+                    }
+                }
+            }
+        }
 
         profile?.let { p ->
             Card(
@@ -1802,6 +2131,14 @@ fun ProfileScreen(viewModel: EmergencyViewModel) {
                     ProfileFieldRow(label = stringResource(R.string.field_country), value = p.country)
                     ProfileFieldRow(label = stringResource(R.string.field_city), value = p.city)
                     ProfileFieldRow(label = stringResource(R.string.field_family_contacts), value = p.familyPhones)
+                    ProfileFieldRow(
+                        label = stringResource(R.string.family_phones_app_installed_label),
+                        value = if (p.installedAppPhones.isNotBlank()) {
+                            p.installedAppPhones.split(",").joinToString(", ") { "📱 $it" }
+                        } else {
+                            "Ninguno"
+                        }
+                    )
                 }
             }
         }
@@ -1834,5 +2171,215 @@ fun ProfileFieldRow(label: String, value: String) {
     ) {
         Text(label, color = TextGray, fontSize = 13.sp)
         Text(value, color = TextWhite, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+    }
+}
+
+@Composable
+fun HelpScreen(viewModel: EmergencyViewModel) {
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+            .testTag("help_screen"),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = SlateSurface),
+                shape = RoundedCornerShape(24.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(72.dp)
+                            .background(RedEmergency.copy(alpha = 0.2f), CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Help,
+                            contentDescription = null,
+                            tint = RedEmergencyLight,
+                            modifier = Modifier.size(36.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = stringResource(R.string.help_screen_title),
+                        color = TextWhite,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = stringResource(R.string.help_screen_desc),
+                        color = TextGray,
+                        fontSize = 13.sp,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+        }
+
+        item {
+            Text(
+                text = stringResource(R.string.help_step_by_step),
+                color = TextGrayLight,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp)
+            )
+        }
+
+        item {
+            HelpStepCard(
+                stepNumber = "1",
+                title = stringResource(R.string.help_step1_title),
+                description = stringResource(R.string.help_step1_desc),
+                icon = Icons.Filled.Person,
+                iconColor = M3Purple
+            )
+        }
+
+        item {
+            HelpStepCard(
+                stepNumber = "2",
+                title = stringResource(R.string.help_step2_title),
+                description = stringResource(R.string.help_step2_desc),
+                icon = Icons.Filled.Emergency,
+                iconColor = RedEmergencyLight
+            )
+        }
+
+        item {
+            HelpStepCard(
+                stepNumber = "3",
+                title = stringResource(R.string.help_step3_title),
+                description = stringResource(R.string.help_step3_desc),
+                icon = Icons.Filled.Share,
+                iconColor = Color(0xFF25D366)
+            )
+        }
+
+        item {
+            HelpStepCard(
+                stepNumber = "4",
+                title = stringResource(R.string.help_step4_title),
+                description = stringResource(R.string.help_step4_desc),
+                icon = Icons.Filled.Warning,
+                iconColor = AmberWarning
+            )
+        }
+
+        item {
+            HelpStepCard(
+                stepNumber = "5",
+                title = stringResource(R.string.help_step5_title),
+                description = stringResource(R.string.help_step5_desc),
+                icon = Icons.Filled.Timer,
+                iconColor = OrangeWarning
+            )
+        }
+
+        item {
+            HelpStepCard(
+                stepNumber = "6",
+                title = stringResource(R.string.help_step6_title),
+                description = stringResource(R.string.help_step6_desc),
+                icon = Icons.Filled.CheckCircle,
+                iconColor = GreenSafe
+            )
+        }
+
+        item {
+            HelpStepCard(
+                stepNumber = "7",
+                title = stringResource(R.string.help_step7_title),
+                description = stringResource(R.string.help_step7_desc),
+                icon = Icons.Filled.LocalHospital,
+                iconColor = M3Purple
+            )
+        }
+    }
+}
+
+@Composable
+fun HelpStepCard(
+    stepNumber: String,
+    title: String,
+    description: String,
+    icon: ImageVector,
+    iconColor: Color
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = SlateSurface),
+        shape = RoundedCornerShape(16.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.Top
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.width(48.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(32.dp)
+                        .background(iconColor.copy(alpha = 0.15f), CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = iconColor,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                Box(
+                    modifier = Modifier
+                        .size(24.dp)
+                        .background(SlateCard, CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = stepNumber,
+                        color = TextWhite,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
+                Text(
+                    text = title,
+                    color = TextWhite,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+                Text(
+                    text = description,
+                    color = TextGray,
+                    fontSize = 12.sp,
+                    lineHeight = 18.sp
+                )
+            }
+        }
     }
 }

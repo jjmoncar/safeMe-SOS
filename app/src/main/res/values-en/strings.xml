@@ -16,6 +16,7 @@
     <string name="tab_reports">Reports</string>
     <string name="tab_numbers">Numbers</string>
     <string name="tab_profile">Profile</string>
+    <string name="tab_help">Help</string>
 
     <!-- Registration -->
     <string name="registration_title">Personal Safety Registration</string>
@@ -23,9 +24,9 @@
     <string name="full_name">Full Name</string>
     <string name="id_card">ID / Identification Number</string>
     <string name="email_address">Email Address</string>
-    <string name="emergency_contacts_title">Emergency Contacts (Plural)</string>
-    <string name="family_phones_label">Family Phone Numbers (comma-separated)</string>
-    <string name="family_phones_placeholder">+15551234567, +15559876543</string>
+    <string name="emergency_contacts_title">WhatsApp Contacts (Plural)</string>
+    <string name="family_phones_label">WhatsApp Numbers (with country code, no +, comma-separated)</string>
+    <string name="family_phones_placeholder">15551234567, 15559876543</string>
     <string name="rescue_location">Rescue Location</string>
     <string name="country_label">Country: %1$s</string>
     <string name="city_label">City: %1$s</string>
@@ -77,7 +78,7 @@
     <string name="field_email">Email:</string>
     <string name="field_country">Country:</string>
     <string name="field_city">City:</string>
-    <string name="field_family_contacts">Family Contacts:</string>
+    <string name="field_family_contacts">WhatsApp Contacts:</string>
     <string name="edit_profile_button">Edit Profile</string>
 
     <!-- Safety Check Dialog -->
@@ -86,4 +87,63 @@
     <string name="safety_dialog_countdown">Response required in: %1$d s</string>
     <string name="safety_yes">YES, I AM SAFE</string>
     <string name="safety_no">SEND MAXIMUM ALERT</string>
+
+    <!-- Central dispatch and test banners -->
+    <string name="banner_dispatch_disabled_title">Emergency Central Disabled</string>
+    <string name="banner_dispatch_disabled_desc">Adjustment and testing mode active. Real alerts and reports will not be sent to security agencies.</string>
+    <string name="banner_numbers_disabled_title">Automatic Dispatch Disabled</string>
+    <string name="banner_numbers_disabled_desc">The automatic dispatch central will not send alerts to security agencies during this test mode.</string>
+
+    <!-- Emergency Button Screen additions -->
+    <string name="rescue_monitoring_active">Active Rescue Monitoring</string>
+    <string name="status_online">Online</string>
+    <string name="sos_instruction_title">2. Press the SOS Button to Alert</string>
+    <string name="sos_instruction_desc">Successive taps escalate severity (Yellow ➔ Orange ➔ Red)</string>
+    <string name="active_security_alert">SECURITY ALERT IN PROGRESS!</string>
+    <string name="severity_label">SEVERITY: %1$s</string>
+    <string name="type_gps_format">Type: %1$s | GPS: %2$.6f, %3$.6f</string>
+    <string name="status_green_caps">SAFE (GREEN)</string>
+    <string name="status_black_caps">NO SIGNAL (BLACK)</string>
+    <string name="send_alert_whatsapp_title">SEND ALERT VIA WHATSAPP:</string>
+    <string name="send_whatsapp_to">Send WhatsApp to %1$s</string>
+    <string name="voice_activation_title">Voice Activation</string>
+    <string name="voice_activation_desc">Active listening for the SOS command</string>
+    <string name="voice_listening">Listening...</string>
+    <string name="voice_activate_mic">Activate Microphone</string>
+    <string name="voice_say_help">Say SafeMe or Help!</string>
+    <string name="voice_mic_off">Microphone Off</string>
+    <string name="voice_text_captured">Text captured: \"%1$s\"</string>
+    <string name="voice_simulator_desc">Voice Command Simulator (For quick testing):</string>
+
+    <!-- Help Screen -->
+    <string name="help_screen_title">HELP MODULE</string>
+    <string name="help_screen_desc">Step-by-step guide to master SafeMe - SOS and protect yourself in risky situations.</string>
+    <string name="help_step_by_step">STEP BY STEP: APP FUNCTIONALITY</string>
+    <string name="help_step1_title">1. Configure Your Safety Profile</string>
+    <string name="help_step1_desc">Enter your personal details (Name, ID, Email) and register the numbers of your emergency contacts for WhatsApp (with country code, without the + sign).</string>
+    <string name="help_step2_title">2. Activate the SOS Alert</string>
+    <string name="help_step2_desc">In case of emergency, go to the \'SOS Button\' tab and press and hold the center button. The system will immediately geolocate your exact GPS coordinates in real time.</string>
+    <string name="help_step3_title">3. Send WhatsApp Alerts</string>
+    <string name="help_step3_desc">Once the alert is started, the active report panel with the registered contacts will appear. Press the green button to instantly send them a structured WhatsApp message. This message includes your name, ID, incident type, risk level, a Google Maps link with your exact location, and Gemini AI safety recommendations.</string>
+    <string name="help_step4_title">4. Monitor Severity Levels</string>
+    <string name="help_step4_desc">The app uses a dynamic escalation system: YELLOW (low), ORANGE (medium), RED (high), and BLACK (critical without signal). Coordinates are automatically updated with each severity change.</string>
+    <string name="help_step5_title">5. Safety Check Verification</string>
+    <string name="help_step5_desc">During an active alert, the app will show you a dialog asking \'Are you still safe?\'. If you do not respond before the timer, the severity will automatically escalate and the SOS will be updated.</string>
+    <string name="help_step6_title">6. Confirm You Are Safe</string>
+    <string name="help_step6_desc">When the emergency has passed, press the \'I AM SAFE!\' button. This will stop the SOS alert and timer, and allow you to send a predefined peace-of-mind message to your contacts via WhatsApp.</string>
+    <string name="help_step7_title">7. Emergency Numbers Lookup</string>
+    <string name="help_step7_desc">In the \'Numbers\' tab, you will have access to the local database of emergency numbers for the country you registered in your profile (Police, Firefighters, Ambulances, etc.), ready to call.</string>
+
+    <!-- SafeMe-SOS App Installed Simulation -->
+    <string name="family_phones_app_installed_label">Which contacts have the SafeMe-SOS app installed?</string>
+    <string name="app_installed_checkbox">Has SafeMe-SOS app installed (Will receive on-screen alert)</string>
+    <string name="simulated_incoming_alert_title">📱 SIMULATOR: Alert Received on Contact</string>
+    <string name="simulated_incoming_alert_desc">Simulated screen of contact %1$s, who has the SafeMe-SOS app installed and received the real-time alert immediately on their screen.</string>
+    <string name="dismiss_button">Close Screen Alert</string>
+    <string name="sender_label">Sender: %1$s</string>
+    <string name="contact_label">Contact: %1$s</string>
+    <string name="incident_label">Incident: %1$s</string>
+    <string name="gps_coords_label">GPS Coordinates: %1$s, %2$s</string>
+    <string name="alert_not_installed">⚠️ %1$s does not have the app installed. Send exclusively via WhatsApp.</string>
+    <string name="alert_installed">📱 %1$s received the alert on their screen.</string>
 </resources>

@@ -12,7 +12,8 @@ data class UserProfile(
     val email: String,
     val familyPhones: String, // comma-separated
     val country: String,
-    val city: String
+    val city: String,
+    val installedAppPhones: String = "" // comma-separated list of phones with app installed
 )
 
 @Entity(tableName = "emergency_reports")
@@ -83,7 +84,7 @@ interface EmergencyDao {
     suspend fun insertEmergencyNumbers(numbers: List<EmergencyNumber>)
 }
 
-@Database(entities = [UserProfile::class, EmergencyReport::class, EmergencyNumber::class], version = 2, exportSchema = false)
+@Database(entities = [UserProfile::class, EmergencyReport::class, EmergencyNumber::class], version = 3, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun emergencyDao(): EmergencyDao
 
