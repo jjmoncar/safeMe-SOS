@@ -48,7 +48,7 @@ import com.example.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SafeMeApp(viewModel: EmergencyViewModel) {
+fun SafeMeApp(viewModel: EmergencyViewModel, activity: android.app.Activity? = null) {
     val context = LocalContext.current
     val currentScreen by viewModel.currentScreen.collectAsState()
     val activeReport by viewModel.activeReport.collectAsState()
@@ -107,10 +107,10 @@ fun SafeMeApp(viewModel: EmergencyViewModel) {
                         RegistrationScreen(viewModel = viewModel)
                     }
                     EmergencyViewModel.Screen.EMERGENCY_BUTTON -> {
-                        EmergencyButtonScreen(viewModel = viewModel)
+                        EmergencyButtonScreen(viewModel = viewModel, activity = activity)
                     }
                     EmergencyViewModel.Screen.REPORTS_DAILY -> {
-                        ReportsScreen(viewModel = viewModel)
+                        ReportsScreen(viewModel = viewModel, activity = activity)
                     }
                     EmergencyViewModel.Screen.NUMBERS_DB -> {
                         NumbersDbScreen(viewModel = viewModel)
@@ -943,7 +943,7 @@ fun EscalationStatusIndicator(activeSeverity: String?) {
 
 // ----------------- EMERGENCY BUTTON SCREEN -----------------
 @Composable
-fun EmergencyButtonScreen(viewModel: EmergencyViewModel) {
+fun EmergencyButtonScreen(viewModel: EmergencyViewModel, activity: android.app.Activity? = null) {
     val context = LocalContext.current
     val userProfile by viewModel.userProfile.collectAsState(initial = null)
     val activeReport by viewModel.activeReport.collectAsState()
@@ -1188,7 +1188,10 @@ fun EmergencyButtonScreen(viewModel: EmergencyViewModel) {
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Button(
-                            onClick = { viewModel.markAsSafe() },
+                            onClick = { 
+                                viewModel.markAsSafe()
+                                activity?.let { com.example.AdManager.showInterstitialAd(it) {} }
+                            },
                             colors = ButtonDefaults.buttonColors(containerColor = GreenSafe),
                             modifier = Modifier
                                 .weight(1f)
@@ -1555,7 +1558,7 @@ fun EmergencyButtonScreen(viewModel: EmergencyViewModel) {
 
 // ----------------- REPORTS DAILY TAB SCREEN -----------------
 @Composable
-fun ReportsScreen(viewModel: EmergencyViewModel) {
+fun ReportsScreen(viewModel: EmergencyViewModel, activity: android.app.Activity? = null) {
     val dailyReports by viewModel.dailyReports.collectAsState()
     val profile by viewModel.userProfile.collectAsState(initial = null)
 
@@ -1651,6 +1654,7 @@ fun ReportsScreen(viewModel: EmergencyViewModel) {
                 onMarkAsSafe = {
                     viewModel.markAsSafe()
                     selectedReportForDetails = null
+                    activity?.let { com.example.AdManager.showInterstitialAd(it) {} }
                 },
                 onForceBlack = {
                     viewModel.simulateDisconnection()

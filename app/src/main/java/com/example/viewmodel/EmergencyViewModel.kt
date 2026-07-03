@@ -95,7 +95,7 @@ class EmergencyViewModel(application: Application) : AndroidViewModel(applicatio
     val detectedSpeech: StateFlow<String> = _detectedSpeech
 
     // Control for Emergency Central Dispatch (True when active, False during tests/adjustments)
-    private val _isCentralDispatchEnabled = MutableStateFlow(false)
+    private val _isCentralDispatchEnabled = MutableStateFlow(true)
     val isCentralDispatchEnabled: StateFlow<Boolean> = _isCentralDispatchEnabled
 
     // Email Dispatch Status Logs
