@@ -1,0 +1,18 @@
+--- app/src/main/java/com/example/MainActivity.kt
++++ app/src/main/java/com/example/MainActivity.kt
+@@ -26,9 +26,7 @@
+     enableEdgeToEdge()
+ 
+     // Initialize Google Mobile Ads SDK
+-    CoroutineScope(Dispatchers.IO).launch {
+-        MobileAds.initialize(this@MainActivity) {}
+-    }
+-
+-    // Pre-load interstitial ad
+-    AdManager.loadInterstitialAd(this)
++    MobileAds.initialize(this) {
++        // Pre-load interstitial ad
++        AdManager.loadInterstitialAd(this)
++    }
+ 
+     setContent {

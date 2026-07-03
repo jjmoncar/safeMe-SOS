@@ -25,11 +25,10 @@ class MainActivity : ComponentActivity() {
     enableEdgeToEdge()
 
     // Initialize Google Mobile Ads SDK
-    CoroutineScope(Dispatchers.IO).launch {
-        MobileAds.initialize(this@MainActivity) {}
-    }
+    MobileAds.initialize(this) {
     // Pre-load interstitial ad
     AdManager.loadInterstitialAd(this)
+    }
 
     setContent {
       MyApplicationTheme {
